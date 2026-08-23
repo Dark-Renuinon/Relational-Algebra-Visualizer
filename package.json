@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "server": "node server/index.js",
+    "dev:full": "concurrently \"npm run server\" \"npm run dev\"",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run"
@@ -14,9 +16,14 @@
     "d3": "^7.9.0",
     "react": "latest",
     "react-dom": "latest",
-    "vite": "latest"
+    "vite": "latest",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0",
+    "mysql2": "^3.14.3"
   },
   "devDependencies": {
-    "vitest": "latest"
+    "vitest": "latest",
+    "concurrently": "^9.2.1"
   }
 }
