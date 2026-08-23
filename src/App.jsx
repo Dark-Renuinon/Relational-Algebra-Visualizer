@@ -4,11 +4,14 @@ import { parseRelationalAlgebra, RAError } from './engine/parser';
 import { executeAst, relationSummary } from './engine/executor';
 import { sqlToRelationalAlgebra } from './engine/sql';
 import { createMarkdownReport, downloadText, relationToCsv, relationToJson } from './engine/exporters';
-import { loadDatabase, loadHistory, loadTheme, resetDatabase, saveDatabase, saveHistory, saveTheme } from './utils/storage';
+import { loadTheme, saveTheme } from './utils/storage';
+import { addColumn, clearHistory, createRow, createTable, deleteColumn, deleteHistoryEntry, deleteRow, deleteTable, executeSql, getDatabase, getHistory, saveHistoryEntry, updateRow } from './services/api';
 import RelationTable from './components/RelationTable';
 import ExpressionTree from './components/ExpressionTree';
 import DataEditor from './components/DataEditor';
 import LearnSection from './components/LearnSection';
+import SchemaManager from './components/SchemaManager';
+import SqlWorkspace from './components/SqlWorkspace';
 
 const CHEAT_SHEET = [
   ['σ condition (R)', 'Selection'], ['π A, B (R)', 'Projection'], ['R ∪ S', 'Union'], ['R − S', 'Difference'], ['R × S', 'Product'],
@@ -35,8 +38,8 @@ function makeHistoryEntry({ query, mode, algebra, result, elapsed, status, error
 
 export default function App() {
   const [theme, setTheme] = useState(loadTheme);
-  const [database, setDatabase] = useState(loadDatabase);
-  const [history, setHistory] = useState(loadHistory);
+  const [database, setDatabase] = useState({});
+  const [history, setHistory] = useState([]);
   const [mode, setMode] = useState('ra');
   const [query, setQuery] = useState(EXAMPLES[2].query);
   const [execution, setExecution] = useState(null);
@@ -45,8 +48,16 @@ export default function App() {
   const [notice, setNotice] = useState({ type: 'info', text: 'Choose an example or enter a relational algebra expression, then run it.' });
 
   useEffect(() => { document.documentElement.dataset.theme = theme; saveTheme(theme); }, [theme]);
-  useEffect(() => { saveDatabase(database); }, [database]);
-  useEffect(() => { saveHistory(history); }, [history]);
+  useEffect(() => {
+    let active = true;
+    Promise.all([getDatabase(), getHistory()]).then(([nextDatabase, nextHistory]) => {
+      if (!active) return;
+      setDatabase(nextDatabase);
+      setHistory(nextHistory);
+      setNotice({ type: 'info', text: 'Connected to MySQL. You can now run queries and save relation changes.' });
+    }).catch((error) => active && setNotice({ type: 'error', text: `Could not connect to MySQL: ${error.message}` }));
+    return () => { active = false; };
+  }, []);
 
   const sqlPreview = useMemo(() => {
     if (mode !== 'sql' || !query.trim()) return '';
@@ -59,9 +70,14 @@ export default function App() {
 
   function persistHistory(entry) {
     setHistory((previous) => [entry, ...previous].slice(0, 25));
+    saveHistoryEntry(entry).catch((error) => setNotice({ type: 'error', text: `Query ran, but its history was not saved: ${error.message}` }));
   }
 
   function runExpression(rawQuery = query, rawMode = mode) {
+    if (!Object.keys(database).length) {
+      setNotice({ type: 'error', text: 'The MySQL database is still loading or unavailable.' });
+      return;
+    }
     const started = performance.now();
     try {
       const algebra = rawMode === 'sql' ? sqlToRelationalAlgebra(rawQuery) : rawQuery;
@@ -97,6 +113,58 @@ export default function App() {
     setMode(item.mode || 'ra');
     setQuery(item.query);
     setNotice({ type: 'info', text: 'History item loaded. Press Run to execute it against your current browser database.' });
+  }
+
+  async function reloadDatabase() {
+    try {
+      setDatabase(await getDatabase());
+      setNotice({ type: 'success', text: 'Relations reloaded from MySQL.' });
+    } catch (error) { setNotice({ type: 'error', text: error.message }); }
+  }
+  async function saveUpdatedRow(relation, originalRow, row) {
+    try {
+      const keyColumns = database[relation]?.key || [];
+      if (!keyColumns.length) throw new Error(`${relation} has no primary key, so it cannot be updated through the editor.`);
+      const key = Object.fromEntries(keyColumns.map((column) => [column, originalRow[column]]));
+      await updateRow(relation, key, row);
+      await reloadDatabase();
+      setNotice({ type: 'success', text: `${relation} row saved to MySQL.` });
+    } catch (error) { setNotice({ type: 'error', text: error.message }); }
+  }
+  async function saveNewRow(relation, row) {
+    try { await createRow(relation, row); await reloadDatabase(); setNotice({ type: 'success', text: `New ${relation} row saved to MySQL.` }); }
+    catch (error) { setNotice({ type: 'error', text: error.message }); }
+  }
+  async function removeDatabaseRow(relation, row) {
+    try {
+      const keyColumns = database[relation]?.key || [];
+      if (!keyColumns.length) throw new Error(`${relation} has no primary key, so it cannot be deleted through the editor.`);
+      const key = Object.fromEntries(keyColumns.map((column) => [column, row[column]]));
+      await deleteRow(relation, key);
+      await reloadDatabase();
+      setNotice({ type: 'success', text: `${relation} row deleted from MySQL.` });
+    } catch (error) { setNotice({ type: 'error', text: error.message }); }
+  }
+  async function createDatabaseTable(name, columns) {
+    try { await createTable(name, columns); await reloadDatabase(); setNotice({ type: 'success', text: `${name} table created in MySQL.` }); }
+    catch (error) { setNotice({ type: 'error', text: error.message }); throw error; }
+  }
+  async function removeDatabaseTable(name) {
+    try { await deleteTable(name); await reloadDatabase(); setNotice({ type: 'success', text: `${name} table deleted from MySQL.` }); }
+    catch (error) { setNotice({ type: 'error', text: error.message }); throw error; }
+  }
+  async function createDatabaseColumn(table, column) {
+    try { await addColumn(table, column); await reloadDatabase(); setNotice({ type: 'success', text: `${column.name} added to ${table}.` }); }
+    catch (error) { setNotice({ type: 'error', text: error.message }); throw error; }
+  }
+  async function removeDatabaseColumn(table, column) {
+    try { await deleteColumn(table, column); await reloadDatabase(); setNotice({ type: 'success', text: `${column} removed from ${table}.` }); }
+    catch (error) { setNotice({ type: 'error', text: error.message }); throw error; }
+  }
+  async function runSqlStatement(sql) {
+    const result = await executeSql(sql);
+    if (result.type === 'change') await reloadDatabase();
+    return result;
   }
 
   function exportResult(kind) {
@@ -162,14 +230,18 @@ export default function App() {
           <div className="step-track">{execution.result.steps.map((step, index) => <button type="button" key={step.nodeId} className={`step-pill ${index === currentStep ? 'active' : ''}`} onClick={() => { setCurrentStep(index); setSelectedNodeId(step.nodeId); }}><span>{index + 1}</span><strong>{step.title}</strong><small>{step.output.rows.length} tuples</small></button>)}</div></> : <div className="timeline-placeholder">The execution timeline appears here after a successful query.</div>}
       </section>
 
-      <DataEditor database={database} onChange={setDatabase} onReset={() => { setDatabase(resetDatabase()); setNotice({ type: 'info', text: 'The browser database has been restored to the bundled sample relations.' }); }} />
+      <DataEditor database={database} onCreateRow={saveNewRow} onDeleteRow={removeDatabaseRow} onReload={reloadDatabase} onUpdateRow={saveUpdatedRow} />
 
-      <section className="history-section" aria-labelledby="history-heading"><div className="section-heading"><div><span className="eyebrow">localStorage</span><h2 id="history-heading">Query history</h2><p>Saved on this device and retained after refresh. The newest 25 runs are kept.</p></div>{history.length > 0 && <button type="button" className="text-button" onClick={() => setHistory([])}>Clear history</button>}</div>
-        {history.length ? <div className="history-list">{history.map((item) => <article className="history-item" key={item.id}><div className={`status-dot ${item.status}`} aria-label={item.status} /><div className="history-main"><code>{item.query}</code><p>{formatTimestamp(item.timestamp)} · {item.status === 'success' ? `${item.result.tuples} tuples · ${item.executionTime.toFixed(2)} ms` : item.error}</p></div><div className="history-actions"><button type="button" onClick={() => loadHistoryItem(item)}>Load</button><button type="button" onClick={() => runExpression(item.query, item.mode || 'ra')}>Re-run</button><button type="button" className="danger" aria-label="Delete history item" onClick={() => setHistory((items) => items.filter((entry) => entry.id !== item.id))}>×</button></div></article>)}</div> : <div className="empty-state">Your executed queries will appear here.</div>}
+      <SchemaManager database={database} onAddColumn={createDatabaseColumn} onCreateTable={createDatabaseTable} onDeleteColumn={removeDatabaseColumn} onDeleteTable={removeDatabaseTable} />
+
+      <SqlWorkspace onRun={runSqlStatement} />
+
+      <section className="history-section" aria-labelledby="history-heading"><div className="section-heading"><div><span className="eyebrow">MySQL</span><h2 id="history-heading">Query history</h2><p>Saved permanently in MySQL. The newest 25 runs are shown.</p></div>{history.length > 0 && <button type="button" className="text-button" onClick={async () => { try { await clearHistory(); setHistory([]); } catch (error) { setNotice({ type: 'error', text: error.message }); } }}>Clear history</button>}</div>
+        {history.length ? <div className="history-list">{history.map((item) => <article className="history-item" key={item.id}><div className={`status-dot ${item.status}`} aria-label={item.status} /><div className="history-main"><code>{item.query}</code><p>{formatTimestamp(item.timestamp)} · {item.status === 'success' ? `${item.result.tuples} tuples · ${Number(item.executionTime).toFixed(2)} ms` : item.error}</p></div><div className="history-actions"><button type="button" onClick={() => loadHistoryItem(item)}>Load</button><button type="button" onClick={() => runExpression(item.query, item.mode || 'ra')}>Re-run</button><button type="button" className="danger" aria-label="Delete history item" onClick={async () => { try { await deleteHistoryEntry(item.id); setHistory((items) => items.filter((entry) => entry.id !== item.id)); } catch (error) { setNotice({ type: 'error', text: error.message }); } }}>×</button></div></article>)}</div> : <div className="empty-state">Your executed queries will appear here.</div>}
       </section>
 
       <LearnSection />
-      <footer>Built with React + Vite. All parsing, execution, visualization, storage, and exports run locally in the browser — no backend, database server, or API key required.</footer>
+      <footer>Built with React + Vite. Relation data and query history are stored in MySQL through a Node.js API; parsing and visualization run in the browser.</footer>
     </main>
   );
 }
