@@ -1,0 +1,4 @@
+node_modules/
+frontend/dist/
+backend/database/relations.json
+.DS_Store
