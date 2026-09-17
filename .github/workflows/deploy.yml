@@ -17,20 +17,29 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      VITE_SUPABASE_URL: https://rvhdznuwyhliydgkmpor.supabase.co
+      VITE_SUPABASE_ANON_KEY: sb_publishable_TsImnNJYDTpoeHMTUr5Vbw_HvFRVQgl
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
+
       - name: Install dependencies
         run: npm ci
+
       - name: Build application
         run: npm run build
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
@@ -42,6 +51,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     needs: build
     runs-on: ubuntu-latest
+
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
