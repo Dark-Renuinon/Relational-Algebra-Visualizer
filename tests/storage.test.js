@@ -28,4 +28,11 @@ describe('localStorage persistence helpers', () => {
     expect(storage.loadHistory()).toEqual([]);
     expect(['light', 'dark']).toContain(storage.loadTheme());
   });
+
+  it('persists the selected theme and reads legacy raw theme values', () => {
+    storage.saveTheme('light');
+    expect(storage.loadTheme()).toBe('light');
+    memory.set('ra-visualizer-theme-v1', 'dark');
+    expect(storage.loadTheme()).toBe('dark');
+  });
 });
