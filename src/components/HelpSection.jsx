@@ -6,9 +6,8 @@ const CONTROLS = [
   ['Timeline controls', 'Move through the real bottom-up execution steps; Reset returns to the first step.'],
   ['Download report', 'Creates a PDF, DOCX, or TXT report using the currently completed execution.'],
   ['Theme toggle', 'Switches the whole interface between Day and Night mode and remembers the choice.'],
-  ['Edit sample relations', 'Add, update, or remove tuples in either browser storage or the optional local MySQL database. Browser changes stay on this device; MySQL changes are saved to that local database.'],
-  ['Table manager', 'Create tables and add or remove columns in either storage mode. In browser mode, column names and primary-key choices are kept locally for the visualizer.'],
-  ['SQL workspace', 'Appears only when the optional local MySQL API is connected. It runs one supported SQL statement against that local development database.']
+  ['Edit sample relations', 'Add, update, or remove tuples in Supabase PostgreSQL. Changes are shared with anyone using this demo project.'],
+  ['Relation definitions', 'Teaching relations are fixed and managed through reviewed Supabase migrations; the app does not expose schema changes.']
 ];
 
 const ERRORS = [

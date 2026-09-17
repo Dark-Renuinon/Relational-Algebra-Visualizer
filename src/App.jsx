@@ -4,14 +4,12 @@ import { parseRelationalAlgebra, RAError } from './engine/parser';
 import { executeAst, relationSummary } from './engine/executor';
 import { sqlToRelationalAlgebra } from './engine/sql';
 import { createMarkdownReport, downloadText, relationToCsv, relationToJson } from './engine/exporters';
-import { loadDatabase, loadHistory, loadTheme, saveDatabase, saveHistory, saveTheme } from './utils/storage';
-import { addColumn, clearHistory, createRow, createTable, deleteColumn, deleteHistoryEntry, deleteRow, deleteTable, executeSql, getDatabase, getHistory, saveHistoryEntry, updateRow } from './services/api';
+import { loadTheme, saveTheme } from './utils/storage';
+import { clearHistory, createRow, deleteHistoryEntry, deleteRow, getDatabase, getHistory, saveHistoryEntry, updateRow } from './services/api';
 import RelationTable from './components/RelationTable';
 import ExpressionTree from './components/ExpressionTree';
 import DataEditor from './components/DataEditor';
 import LearnSection from './components/LearnSection';
-import SchemaManager from './components/SchemaManager';
-import SqlWorkspace from './components/SqlWorkspace';
 import HelpSection from './components/HelpSection';
 import ReportDownload from './components/ReportDownload';
 import TeamSection from './components/TeamSection';
@@ -43,7 +41,6 @@ export default function App() {
   const [theme, setTheme] = useState(loadTheme);
   const [database, setDatabase] = useState({});
   const [history, setHistory] = useState([]);
-  const [dataSource, setDataSource] = useState('loading');
   const [mode, setMode] = useState('ra');
   const [query, setQuery] = useState(EXAMPLES[2].query);
   const [execution, setExecution] = useState(null);
@@ -59,14 +56,10 @@ export default function App() {
       if (!active) return;
       setDatabase(nextDatabase);
       setHistory(nextHistory);
-      setDataSource('mysql');
-      setNotice({ type: 'info', text: 'Connected to MySQL. You can now run queries and save relation changes.' });
-    }).catch(() => {
+      setNotice({ type: 'info', text: 'Connected to Supabase. Relation changes and history are persistent.' });
+    }).catch((error) => {
       if (!active) return;
-      setDatabase(loadDatabase());
-      setHistory(loadHistory());
-      setDataSource('browser');
-      setNotice({ type: 'info', text: 'Using the browser sample relations. You can edit relations locally; optional MySQL persistence and the SQL workspace are available when the local API is running.' });
+      setNotice({ type: 'error', text: `Unable to load Supabase data: ${error.message}` });
     });
     return () => { active = false; };
   }, []);
@@ -83,15 +76,14 @@ export default function App() {
   function persistHistory(entry) {
     setHistory((previous) => {
       const next = [entry, ...previous].slice(0, 25);
-      if (dataSource === 'browser') saveHistory(next);
       return next;
     });
-    if (dataSource === 'mysql') saveHistoryEntry(entry).catch((error) => setNotice({ type: 'error', text: `Query ran, but its history was not saved: ${error.message}` }));
+    saveHistoryEntry(entry).catch((error) => setNotice({ type: 'error', text: `Query ran, but its history was not saved: ${error.message}` }));
   }
 
   function runExpression(rawQuery = query, rawMode = mode) {
     if (!database || !Object.keys(database).length) {
-      setNotice({ type: 'error', text: dataSource === 'loading' ? 'Relations are still loading. Wait a moment, then try again.' : 'No relations are available. Create a table in the Table manager, then run your expression.' });
+      setNotice({ type: 'error', text: 'Relations are unavailable. Check the Supabase configuration and migration, then reload.' });
       return;
     }
     const started = performance.now();
@@ -143,118 +135,38 @@ export default function App() {
   function loadHistoryItem(item) {
     setMode(item.mode || 'ra');
     setQuery(item.query);
-    setNotice({ type: 'info', text: `History item loaded. Press Run to execute it against the current ${dataSource === 'mysql' ? 'MySQL database' : 'browser relations'}.` });
+    setNotice({ type: 'info', text: 'History item loaded. Press Run to execute it against the current Supabase relations.' });
   }
 
   async function reloadDatabase() {
-    if (dataSource === 'browser') {
-      setDatabase(loadDatabase());
-      setNotice({ type: 'success', text: 'Relations reloaded from browser storage.' });
-      return;
-    }
     try {
       setDatabase(await getDatabase());
-      setNotice({ type: 'success', text: 'Relations reloaded from MySQL.' });
+      setNotice({ type: 'success', text: 'Relations reloaded from Supabase.' });
     } catch (error) { setNotice({ type: 'error', text: error.message }); }
   }
-  function updateBrowserDatabase(updater) {
-    setDatabase((previous) => {
-      const next = updater(structuredClone(previous));
-      saveDatabase(next);
-      return next;
-    });
-  }
   async function saveUpdatedRow(relation, originalRow, row, rowIndex) {
-    if (dataSource === 'browser') {
-      updateBrowserDatabase((next) => { next[relation].rows[rowIndex] = { ...row }; return next; });
-      setNotice({ type: 'success', text: `${relation} row saved in browser storage.` });
-      return;
-    }
     try {
       const keyColumns = database[relation]?.key || [];
       if (!keyColumns.length) throw new Error(`${relation} has no primary key, so it cannot be updated through the editor.`);
       const key = Object.fromEntries(keyColumns.map((column) => [column, originalRow[column]]));
       await updateRow(relation, key, row);
       await reloadDatabase();
-      setNotice({ type: 'success', text: `${relation} row saved to MySQL.` });
+      setNotice({ type: 'success', text: `${relation} row saved to Supabase.` });
     } catch (error) { setNotice({ type: 'error', text: error.message }); }
   }
   async function saveNewRow(relation, row) {
-    if (dataSource === 'browser') {
-      updateBrowserDatabase((next) => { next[relation].rows.push({ ...row }); return next; });
-      setNotice({ type: 'success', text: `New ${relation} row saved in browser storage.` });
-      return;
-    }
-    try { await createRow(relation, row); await reloadDatabase(); setNotice({ type: 'success', text: `New ${relation} row saved to MySQL.` }); }
+    try { await createRow(relation, row); await reloadDatabase(); setNotice({ type: 'success', text: `New ${relation} row saved to Supabase.` }); }
     catch (error) { setNotice({ type: 'error', text: error.message }); }
   }
   async function removeDatabaseRow(relation, row, rowIndex) {
-    if (dataSource === 'browser') {
-      updateBrowserDatabase((next) => { next[relation].rows.splice(rowIndex, 1); return next; });
-      setNotice({ type: 'success', text: `${relation} row deleted from browser storage.` });
-      return;
-    }
     try {
       const keyColumns = database[relation]?.key || [];
       if (!keyColumns.length) throw new Error(`${relation} has no primary key, so it cannot be deleted through the editor.`);
       const key = Object.fromEntries(keyColumns.map((column) => [column, row[column]]));
       await deleteRow(relation, key);
       await reloadDatabase();
-      setNotice({ type: 'success', text: `${relation} row deleted from MySQL.` });
+      setNotice({ type: 'success', text: `${relation} row deleted from Supabase.` });
     } catch (error) { setNotice({ type: 'error', text: error.message }); }
-  }
-  async function createDatabaseTable(name, columns) {
-    if (dataSource === 'browser') {
-      const cleanName = String(name || '').trim();
-      if (!/^[A-Za-z][A-Za-z0-9_]*$/.test(cleanName)) throw new Error('Table name must start with a letter and contain only letters, numbers, or underscores.');
-      if (Object.keys(database).some((table) => table.toLowerCase() === cleanName.toLowerCase())) throw new Error(`A table named ${cleanName} already exists.`);
-      if (!columns.length || columns.some((column) => !/^[A-Za-z][A-Za-z0-9_]*$/.test(column.name))) throw new Error('Every column needs a valid name.');
-      if (new Set(columns.map((column) => column.name.toLowerCase())).size !== columns.length) throw new Error('Column names must be unique.');
-      if (!columns.some((column) => column.primaryKey)) throw new Error('Select at least one primary-key column.');
-      updateBrowserDatabase((next) => { next[cleanName] = { columns: columns.map((column) => column.name), key: columns.filter((column) => column.primaryKey).map((column) => column.name), rows: [] }; return next; });
-      setNotice({ type: 'success', text: `${cleanName} table created in browser storage.` });
-      return;
-    }
-    try { await createTable(name, columns); await reloadDatabase(); setNotice({ type: 'success', text: `${name} table created in MySQL.` }); }
-    catch (error) { setNotice({ type: 'error', text: error.message }); throw error; }
-  }
-  async function removeDatabaseTable(name) {
-    if (dataSource === 'browser') {
-      updateBrowserDatabase((next) => { delete next[name]; return next; });
-      setNotice({ type: 'success', text: `${name} table deleted from browser storage.` });
-      return;
-    }
-    try { await deleteTable(name); await reloadDatabase(); setNotice({ type: 'success', text: `${name} table deleted from MySQL.` }); }
-    catch (error) { setNotice({ type: 'error', text: error.message }); throw error; }
-  }
-  async function createDatabaseColumn(table, column) {
-    if (dataSource === 'browser') {
-      const cleanName = String(column?.name || '').trim();
-      if (!/^[A-Za-z][A-Za-z0-9_]*$/.test(cleanName)) throw new Error('Column name must start with a letter and contain only letters, numbers, or underscores.');
-      if (database[table]?.columns.some((name) => name.toLowerCase() === cleanName.toLowerCase())) throw new Error('A column with that name already exists.');
-      updateBrowserDatabase((next) => { next[table].columns.push(cleanName); next[table].rows.forEach((row) => { row[cleanName] = ''; }); return next; });
-      setNotice({ type: 'success', text: `${cleanName} added to ${table} in browser storage.` });
-      return;
-    }
-    try { await addColumn(table, column); await reloadDatabase(); setNotice({ type: 'success', text: `${column.name} added to ${table}.` }); }
-    catch (error) { setNotice({ type: 'error', text: error.message }); throw error; }
-  }
-  async function removeDatabaseColumn(table, column) {
-    if (dataSource === 'browser') {
-      if (database[table]?.key?.includes(column)) throw new Error('A primary-key column cannot be removed in browser storage.');
-      if ((database[table]?.columns.length ?? 0) <= 1) throw new Error('A relation must keep at least one column. Delete the table instead if it is no longer needed.');
-      updateBrowserDatabase((next) => { next[table].columns = next[table].columns.filter((item) => item !== column); next[table].rows.forEach((row) => delete row[column]); return next; });
-      setNotice({ type: 'success', text: `${column} removed from ${table} in browser storage.` });
-      return;
-    }
-    try { await deleteColumn(table, column); await reloadDatabase(); setNotice({ type: 'success', text: `${column} removed from ${table}.` }); }
-    catch (error) { setNotice({ type: 'error', text: error.message }); throw error; }
-  }
-  async function runSqlStatement(sql) {
-    if (dataSource !== 'mysql') throw new Error('The full SQL workspace requires the optional local MySQL API. The query builder still supports Basic SQL SELECT–FROM–WHERE in this browser-only mode.');
-    const result = await executeSql(sql);
-    if (result.type === 'change') await reloadDatabase();
-    return result;
   }
 
   function exportResult(kind) {
@@ -324,20 +236,16 @@ export default function App() {
           <div className="step-track">{execution.result.steps.map((step, index) => <button type="button" key={step.nodeId} className={`step-pill ${index === currentStep ? 'active' : ''}`} onClick={() => goToStep(index)}><span>{index + 1}</span><strong>{step.title}</strong><small>{step.output.rows.length} tuples</small></button>)}</div></> : <div className="timeline-placeholder">The execution timeline appears here after a successful query.</div>}
       </section>
 
-      <DataEditor database={database} onCreateRow={saveNewRow} onDeleteRow={removeDatabaseRow} onReload={reloadDatabase} onUpdateRow={saveUpdatedRow} source={dataSource} />
+      <DataEditor database={database} onCreateRow={saveNewRow} onDeleteRow={removeDatabaseRow} onReload={reloadDatabase} onUpdateRow={saveUpdatedRow} />
 
-      <SchemaManager database={database} onAddColumn={createDatabaseColumn} onCreateTable={createDatabaseTable} onDeleteColumn={removeDatabaseColumn} onDeleteTable={removeDatabaseTable} />
-
-      {dataSource === 'mysql' && <SqlWorkspace onRun={runSqlStatement} />}
-
-      <section className="history-section" aria-labelledby="history-heading"><div className="section-heading"><div><span className="eyebrow">{dataSource === 'mysql' ? 'MySQL' : 'Browser storage'}</span><h2 id="history-heading">Query history</h2><p>{dataSource === 'mysql' ? 'Saved permanently in MySQL. The newest 25 runs are shown.' : 'Saved in this browser on this device. The newest 25 runs are shown.'}</p></div>{history.length > 0 && <button type="button" className="text-button" onClick={async () => { try { if (dataSource === 'mysql') await clearHistory(); else saveHistory([]); setHistory([]); } catch (error) { setNotice({ type: 'error', text: error.message }); } }}>Clear history</button>}</div>
-        {history.length ? <div className="history-list">{history.map((item) => <article className="history-item" key={item.id}><div className={`status-dot ${item.status}`} aria-label={item.status} /><div className="history-main"><code>{item.query}</code><p>{formatTimestamp(item.timestamp)} · {item.status === 'success' ? `${item.result.tuples} tuples · ${Number(item.executionTime).toFixed(2)} ms` : item.error}</p></div><div className="history-actions"><button type="button" onClick={() => loadHistoryItem(item)}>Load</button><button type="button" onClick={() => runExpression(item.query, item.mode || 'ra')}>Re-run</button><button type="button" className="danger" aria-label="Delete history item" onClick={async () => { try { if (dataSource === 'mysql') await deleteHistoryEntry(item.id); setHistory((items) => { const next = items.filter((entry) => entry.id !== item.id); if (dataSource === 'browser') saveHistory(next); return next; }); } catch (error) { setNotice({ type: 'error', text: error.message }); } }}>×</button></div></article>)}</div> : <div className="empty-state">Your executed queries will appear here.</div>}
+      <section className="history-section" aria-labelledby="history-heading"><div className="section-heading"><div><span className="eyebrow">Supabase PostgreSQL</span><h2 id="history-heading">Query history</h2><p>Saved permanently in Supabase. The newest 25 runs are shown.</p></div>{history.length > 0 && <button type="button" className="text-button" onClick={async () => { try { await clearHistory(); setHistory([]); } catch (error) { setNotice({ type: 'error', text: error.message }); } }}>Clear history</button>}</div>
+        {history.length ? <div className="history-list">{history.map((item) => <article className="history-item" key={item.id}><div className={`status-dot ${item.status}`} aria-label={item.status} /><div className="history-main"><code>{item.query}</code><p>{formatTimestamp(item.timestamp)} · {item.status === 'success' ? `${item.result.tuples} tuples · ${Number(item.executionTime).toFixed(2)} ms` : item.error}</p></div><div className="history-actions"><button type="button" onClick={() => loadHistoryItem(item)}>Load</button><button type="button" onClick={() => runExpression(item.query, item.mode || 'ra')}>Re-run</button><button type="button" className="danger" aria-label="Delete history item" onClick={async () => { try { await deleteHistoryEntry(item.id); setHistory((items) => items.filter((entry) => entry.id !== item.id)); } catch (error) { setNotice({ type: 'error', text: error.message }); } }}>×</button></div></article>)}</div> : <div className="empty-state">Your executed queries will appear here.</div>}
       </section>
 
       <LearnSection onTryExpression={tryExpression} />
       <HelpSection />
       <TeamSection />
-      <footer>Built with React + Vite. The relational algebra parser, validator, executor, visualizations, and report generator run in the browser; browser edits persist locally, with optional MySQL persistence and SQL workspace support when a local API is available.</footer>
+      <footer>Built with React + Vite. The relational algebra parser, validator, executor, visualizations, and report generator run in the browser; relations and query history persist in Supabase PostgreSQL.</footer>
     </main>
   );
 }

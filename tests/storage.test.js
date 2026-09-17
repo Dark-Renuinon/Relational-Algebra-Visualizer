@@ -11,21 +11,8 @@ const storage = await import('../src/utils/storage.js');
 
 describe('localStorage persistence helpers', () => {
   beforeEach(() => memory.clear());
-  it('stores database changes and restores saved query history', () => {
-    const database = storage.loadDatabase();
-    database.STUDENT.rows.push({ StudentID: 99, Name: 'Test', Age: 20, Department: 'CSE', CourseID: 'CS101' });
-    storage.saveDatabase(database);
-    expect(storage.loadDatabase().STUDENT.rows).toHaveLength(6);
-    storage.saveHistory([{ id: '1', query: 'STUDENT', status: 'success' }]);
-    expect(storage.loadHistory()).toEqual([{ id: '1', query: 'STUDENT', status: 'success' }]);
-  });
-
   it('recovers safely from malformed saved data', () => {
-    memory.set('ra-visualizer-database-v1', 'null');
-    memory.set('ra-visualizer-history-v1', '{"not":"a list"}');
     memory.set('ra-visualizer-theme-v1', '"unknown"');
-    expect(storage.loadDatabase().STUDENT.rows).toHaveLength(5);
-    expect(storage.loadHistory()).toEqual([]);
     expect(['light', 'dark']).toContain(storage.loadTheme());
   });
 

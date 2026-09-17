@@ -1,25 +1,45 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import { supabase } from './supabase';
 
-async function request(path, options = {}) {
-  const response = await fetch(`${API_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
-    ...options
-  });
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(payload.error || 'The database request failed.');
-  return payload;
+const RELATIONS = {
+  STUDENT: { table: 'students', columns: ['StudentID', 'Name', 'Age', 'Department', 'CourseID'], key: ['StudentID'] },
+  COURSE: { table: 'courses', columns: ['CourseID', 'CourseName', 'Credits', 'Department'], key: ['CourseID'] },
+  FACULTY: { table: 'faculty', columns: ['FacultyID', 'Name', 'Department'], key: ['FacultyID'] },
+  ENROLLMENT: { table: 'enrollments', columns: ['StudentID', 'CourseID', 'Grade'], key: ['StudentID', 'CourseID'] },
+  STUDENT_COURSES: { table: 'student_courses', columns: ['StudentID', 'CourseID'], key: ['StudentID', 'CourseID'] },
+  CSE_STUDENTS: { table: 'cse_students', columns: ['StudentID', 'Name', 'Age', 'Department', 'CourseID'], key: ['StudentID'] },
+  ECE_STUDENTS: { table: 'ece_students', columns: ['StudentID', 'Name', 'Age', 'Department', 'CourseID'], key: ['StudentID'] },
+  REQUIRED_COURSES: { table: 'required_courses', columns: ['CourseID'], key: ['CourseID'] }
+};
+
+function fail(error) { if (error) throw new Error(error.message); }
+function spec(name) { const value = RELATIONS[name]; if (!value) throw new Error(`Unknown relation: ${name}`); return value; }
+
+export async function getDatabase() {
+  const pairs = await Promise.all(Object.entries(RELATIONS).map(async ([name, relation]) => {
+    const { data, error } = await supabase.from(relation.table).select('*');
+    fail(error);
+    return [name, { columns: relation.columns, key: relation.key, rows: data }];
+  }));
+  return Object.fromEntries(pairs);
 }
 
-export const getDatabase = () => request('/database');
-export const getHistory = () => request('/history');
-export const createRow = (relation, row) => request(`/relations/${relation}`, { method: 'POST', body: JSON.stringify({ row }) });
-export const updateRow = (relation, originalKey, row) => request(`/relations/${relation}`, { method: 'PATCH', body: JSON.stringify({ originalKey, row }) });
-export const deleteRow = (relation, key) => request(`/relations/${relation}`, { method: 'DELETE', body: JSON.stringify({ key }) });
-export const createTable = (name, columns) => request('/tables', { method: 'POST', body: JSON.stringify({ name, columns }) });
-export const deleteTable = (table) => request(`/tables/${encodeURIComponent(table)}`, { method: 'DELETE' });
-export const addColumn = (table, column) => request(`/tables/${encodeURIComponent(table)}/columns`, { method: 'POST', body: JSON.stringify({ column }) });
-export const deleteColumn = (table, column) => request(`/tables/${encodeURIComponent(table)}/columns/${encodeURIComponent(column)}`, { method: 'DELETE' });
-export const executeSql = (sql) => request('/sql', { method: 'POST', body: JSON.stringify({ sql }) });
-export const saveHistoryEntry = (entry) => request('/history', { method: 'POST', body: JSON.stringify(entry) });
-export const deleteHistoryEntry = (id) => request(`/history?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
-export const clearHistory = () => request('/history', { method: 'DELETE' });
+export async function getHistory() {
+  const { data, error } = await supabase.from('query_history').select('*').order('timestamp', { ascending: false }).limit(25);
+  fail(error);
+  return data || [];
+}
+
+export async function createRow(name, row) { const { error } = await supabase.from(spec(name).table).insert(row); fail(error); }
+export async function updateRow(name, originalKey, row) {
+  let query = supabase.from(spec(name).table).update(row);
+  Object.entries(originalKey).forEach(([column, value]) => { query = query.eq(column, value); });
+  const { error } = await query; fail(error);
+}
+export async function deleteRow(name, key) {
+  let query = supabase.from(spec(name).table).delete();
+  Object.entries(key).forEach(([column, value]) => { query = query.eq(column, value); });
+  const { error } = await query; fail(error);
+}
+export async function saveHistoryEntry(entry) { const { error } = await supabase.from('query_history').insert(entry); fail(error); }
+export async function deleteHistoryEntry(id) { const { error } = await supabase.from('query_history').delete().eq('id', id); fail(error); }
+export async function clearHistory() { const { error } = await supabase.from('query_history').delete().not('id', 'is', null); fail(error); }

@@ -6,7 +6,7 @@ function coerce(value) {
   return value;
 }
 
-export default function DataEditor({ database, onCreateRow, onDeleteRow, onReload, onUpdateRow, source = 'mysql' }) {
+export default function DataEditor({ database, onCreateRow, onDeleteRow, onReload, onUpdateRow }) {
   const relationNames = Object.keys(database);
   const [selected, setSelected] = useState(relationNames[0] || '');
   const [draftRows, setDraftRows] = useState([]);
@@ -32,8 +32,8 @@ export default function DataEditor({ database, onCreateRow, onDeleteRow, onReloa
 
   return (
     <section className="panel data-editor" aria-labelledby="data-heading">
-      <div className="panel-heading"><div><span className="eyebrow">{source === 'mysql' ? 'MySQL database' : 'Browser sample relations'}</span><h2 id="data-heading">Edit sample relations</h2></div><button className="text-button" type="button" onClick={onReload}>Reload relations</button></div>
-      <p className="muted">{source === 'mysql' ? 'Use Save to permanently store a row in MySQL. Use the Table manager below for schema changes.' : 'Use Save to keep a row in browser storage on this device. These changes stay local and are available to the visualizer immediately.'}</p>
+      <div className="panel-heading"><div><span className="eyebrow">Supabase PostgreSQL</span><h2 id="data-heading">Edit sample relations</h2></div><button className="text-button" type="button" onClick={onReload}>Reload relations</button></div>
+      <p className="muted">Use Save to persist a row in Supabase. Relation definitions are managed through reviewed migrations.</p>
       <label className="select-label">Relation
         <select value={selected} onChange={(event) => setSelected(event.target.value)}>{relationNames.map((name) => <option value={name} key={name}>{name}</option>)}</select>
       </label>
