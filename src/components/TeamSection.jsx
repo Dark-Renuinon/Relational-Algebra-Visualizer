@@ -7,7 +7,6 @@ export default function TeamSection() {
         <div>
           <span className="eyebrow">Project team</span>
           <h2 id="team-heading">Developed by</h2>
-          <p>Team details live in <code>src/data/team.js</code>, so the placeholders can be replaced in one clear location before submission.</p>
         </div>
       </div>
 
@@ -17,7 +16,7 @@ export default function TeamSection() {
             {member.photo ? <img src={member.photo} alt={`${member.name} portrait`} className="student-photo" /> : <div className="student-photo photo-placeholder" aria-label="Student photograph placeholder">[STUDENT PHOTO]</div>}
             <span className="member-slot">{member.slot}</span>
             <h3>{member.name}</h3>
-            <p>{member.registerNumber}</p>
+            <h3>{member.registerNumber}</h3>
           </article>
         ))}
       </div>
