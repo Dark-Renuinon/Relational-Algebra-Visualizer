@@ -1,0 +1,31 @@
+{
+  "name": "relational-algebra-visualizer",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "server": "node server/index.js",
+    "dev:full": "concurrently \"npm run server\" \"npm run dev\"",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "latest",
+    "cors": "^2.8.5",
+    "d3": "^7.9.0",
+    "docx": "^9.7.1",
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0",
+    "jspdf": "^4.2.1",
+    "mysql2": "^3.14.3",
+    "react": "latest",
+    "react-dom": "latest",
+    "vite": "latest"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "vitest": "latest"
+  }
+}
