@@ -1,10 +1,6 @@
-// Replace the bracketed placeholders below when the team details are available.
-// Add or remove objects to match the final number of team members.
 export const TEAM_MEMBERS = [
-  { slot: 'Member 01', name: '[STUDENT NAME]', registerNumber: '[REGISTER NUMBER]', photo: '' },
-  { slot: 'Member 02', name: '[STUDENT NAME]', registerNumber: '[REGISTER NUMBER]', photo: '' },
-  { slot: 'Member 03', name: '[STUDENT NAME]', registerNumber: '[REGISTER NUMBER]', photo: '' },
-  { slot: 'Member 04', name: '[STUDENT NAME]', registerNumber: '[REGISTER NUMBER]', photo: '' }
+  { slot: 'Member 01', name: 'Mohammed Faisal', registerNumber: '25BCE5777', photo: '' },
+  { slot: 'Member 02', name: 'Nandhan Arulselvan', registerNumber: '25BCE5752', photo: '' },
 ];
 
 export const PROJECT_GUIDE = {
