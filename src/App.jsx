@@ -13,6 +13,7 @@ import LearnSection from './components/LearnSection';
 import HelpSection from './components/HelpSection';
 import ReportDownload from './components/ReportDownload';
 import TeamSection from './components/TeamSection';
+import PracticeSection from './components/PracticeSection';
 
 const CHEAT_SHEET = [
   ['σ condition (R)', 'Selection'], ['π A, B (R)', 'Projection'], ['R ∪ S', 'Union'], ['R − S', 'Difference'], ['R × S', 'Product'],
@@ -183,7 +184,7 @@ export default function App() {
       <header className="topbar">
         <a className="brand" href="#visualizer" aria-label="Go to visualizer"><span className="brand-mark" aria-hidden="true">σ</span><span><h1>Relational Algebra Visualizer</h1><p>Explore query processing — step by step.</p></span></a>
         <div className="header-controls">
-          <nav className="primary-nav" aria-label="Primary navigation"><a href="#home">Home</a><a href="#visualizer">Visualizer</a><a href="#learn">Learn</a><a href="#help">Help</a><a href="#developed-by">Developed By</a><a href="#download">Download</a></nav>
+          <nav className="primary-nav" aria-label="Primary navigation"><a href="#home">Home</a><a href="#visualizer">Visualizer</a><a href="#learn">Learn</a><a href="#quiz">Quiz</a><a href="#competitive-exams">Competitive Exams</a><a href="#help">Help</a><a href="#developed-by">Developed By</a><a href="#download">Download</a></nav>
           <button type="button" className="theme-toggle" onClick={() => setTheme((current) => current === 'dark' ? 'light' : 'dark')} aria-label={`Switch to ${theme === 'dark' ? 'day' : 'night'} mode`}>
             <span aria-hidden="true">{theme === 'dark' ? '☀' : '☾'}</span> {theme === 'dark' ? 'Day' : 'Night'} mode
           </button>
@@ -243,6 +244,8 @@ export default function App() {
       </section>
 
       <LearnSection onTryExpression={tryExpression} />
+      <PracticeSection kind="quiz" />
+      <PracticeSection kind="exams" />
       <HelpSection />
       <TeamSection />
       <footer>Built with React + Vite. The relational algebra parser, validator, executor, visualizations, and report generator run in the browser; relations and query history persist in Supabase PostgreSQL.</footer>
