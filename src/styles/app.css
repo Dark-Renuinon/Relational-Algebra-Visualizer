@@ -120,3 +120,7 @@ html { scroll-behavior: smooth; }.brand { color: inherit; text-decoration: none;
 }
 
 .exam-provenance small { color: var(--muted); font-size: 9px; }
+.limited-content-note { margin: 12px 0 0; border-left: 3px solid var(--amber); padding: 8px 10px; background: color-mix(in srgb, var(--amber) 7%, var(--surface-alt)); color: var(--muted); font-size: 11px; }
+.guide-photo-wrap { position: relative; width: 88px; height: 88px; margin-bottom: 7px; }
+.guide-photo { display: block; width: 100%; height: 100%; border: 1px solid color-mix(in srgb, var(--blue) 35%, var(--border)); border-radius: 50%; object-fit: cover; }
+.guide-initials { display: grid; place-items: center; width: 100%; height: 100%; border: 1px solid color-mix(in srgb, var(--blue) 35%, var(--border)); border-radius: 50%; background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--blue) 20%, transparent), transparent 65%), var(--surface); color: var(--blue); font-size: 25px; font-weight: 900; letter-spacing: .05em; }

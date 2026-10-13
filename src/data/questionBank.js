@@ -73,21 +73,91 @@ export const EXAM_QUESTIONS = [
     prompt: 'Which option gives the degree (arity) of a relation in a relational database?',
     options: ['Number of attributes in its relation schema', 'Number of tuples stored in the relation', 'Number of entries in the relation', 'Number of distinct domains of its relation schema'], answer: 0,
     solution: ['Degree (arity) counts the attributes in the relation schema.', 'Tuple count is the relation cardinality, not its degree.', 'The number of entries depends on both tuples and attributes; distinct domains need not equal the attribute count.', 'Therefore option A is correct.'],
-    exam: { ...gateSource('https://gate.iitk.ac.in/GATE2023/doc/papers/2023/CS_GATE2023.pdf', '2023', '4 February 2023', 'Forenoon (FN), 09:30–12:30 IST'), scheduleUrl: 'https://gate.iitk.ac.in/GATE2023/schedule.html' }, questionNumber: 'Q.16', paper: 'Computer Science and Information Technology (CS)', citationLabel: 'Official GATE 2023 CS question paper', wording: 'Paraphrase'
+    exam: { ...gateSource('https://gate.iitk.ac.in/GATE2023/doc/papers/2023/CS_GATE2023.pdf', '2023', '4 February 2023', 'Forenoon (FN), 09:30–12:30 IST'), answerKeyUrl: 'https://gate2026.iitg.ac.in/doc/download/Answer_keys2023/CS_ANS_GATE2023.pdf', verificationStatus: 'Official question paper and official answer key verified', scheduleUrl: 'https://gate.iitk.ac.in/GATE2023/schedule.html' }, questionNumber: 'Q.16', paper: 'Computer Science and Information Technology (CS)', citationLabel: 'Official GATE 2023 CS question paper', wording: 'Paraphrase'
   },
   {
     id: 'gate-2001-q1-23', difficulty: 'medium', topic: 'Lossless decomposition', sourceType: 'verified-exam',
     prompt: 'A schema R(A,B,C,D) has functional dependencies A → B and C → D. It is decomposed into R₁(A,B) and R₂(C,D). Which statement is correct?',
     options: ['Dependency preserving and lossless join', 'Lossless join but not dependency preserving', 'Dependency preserving but not lossless join', 'Neither dependency preserving nor lossless join'], answer: 2,
     solution: ['A → B is fully represented in R₁ and C → D is fully represented in R₂, so the decomposition preserves the given dependencies.', 'R₁ ∩ R₂ is empty.', 'For a binary lossless decomposition, the common attributes must functionally determine one component; an empty intersection does not do so here.', 'Thus it is dependency preserving but not guaranteed lossless: option C.'],
-    exam: gateSource('https://www.gateexam.info/docs/papers/CS/CS-2001.pdf', '2001'), questionNumber: '1.23', paper: 'Computer Science (CS)', citationLabel: 'Archived GATE CS 2001 paper (GATE Forum scan)', wording: 'Paraphrase'
+    exam: { ...gateSource('https://www.gateexam.info/docs/papers/CS/CS-2001.pdf', '2001'), answerKeyUrl: 'https://gateoverflow.in/716/gate2001-1-23-ugcnet-june2012-iii-18', verificationStatus: 'Archived paper scan and independent answer discussion checked' }, questionNumber: '1.23', paper: 'Computer Science (CS)', citationLabel: 'Archived GATE CS 2001 paper scan', wording: 'Paraphrase'
   },
   {
     id: 'gate-2001-q1-24', difficulty: 'hard', topic: 'Relational algebra expressiveness', sourceType: 'verified-exam',
     prompt: 'Let Adj(X,Y) represent directed graph edges. Which query cannot be expressed by a relational algebra expression of constant length?',
     options: ['List vertices adjacent to a given vertex', 'List vertices that have self-loops', 'List vertices that belong to cycles of fewer than three vertices', 'List all vertices reachable from a given vertex'], answer: 3,
     solution: ['A fixed-length relational algebra expression can use only a fixed number of joins, so it can describe paths only up to a bounded length.', 'Adjacency and self-loops require a single relation scan with a selection.', 'Cycles with length below three have a fixed finite bound and can be expressed using a fixed number of renamed copies and joins.', 'Reachability allows paths of arbitrary length. It needs recursion or a transitive-closure operator, so option D is not expressible by a constant-length classical RA expression.'],
-    exam: gateSource('https://www.gateexam.info/docs/papers/CS/CS-2001.pdf', '2001'), questionNumber: '1.24', paper: 'Computer Science (CS)', citationLabel: 'Archived GATE CS 2001 paper (GATE Forum scan)', wording: 'Paraphrase'
+    exam: { ...gateSource('https://www.gateexam.info/docs/papers/CS/CS-2001.pdf', '2001'), answerKeyUrl: 'https://gateoverflow.in/717/gate-cse-2001-question-1-24', verificationStatus: 'Archived paper scan and answer discussion checked' }, questionNumber: '1.24', paper: 'Computer Science (CS)', citationLabel: 'Archived GATE CS 2001 paper scan', wording: 'Paraphrase'
+  },
+  {
+    id: 'gate-1999-q1-18', difficulty: 'easy', topic: 'Join cardinality', sourceType: 'verified-exam',
+    prompt: 'If R has m tuples and S has n tuples, what are the maximum and minimum possible tuple counts for R ⋈ S, respectively?',
+    options: ['m+n and 0', 'mn and 0', 'm+n and |m−n|', 'mn and m+n'], answer: 1,
+    solution: ['A join cannot produce more tuple pairs than the Cartesian product, so its maximum is m×n.', 'If the schemas share a join attribute, the value sets can be disjoint, producing no matches and a minimum of 0.', 'Thus the maximum/minimum pair is mn and 0: option B.'],
+    exam: { ...gateSource('https://gateoverflow.in/1471/gate-cse-1999-question-1-18-isro2016-53', '1999'), answerKeyUrl: 'https://gateoverflow.in/1471/gate-cse-1999-question-1-18-isro2016-53', verificationStatus: 'Archived question transcription and accepted solution checked' }, questionNumber: '1.18', paper: 'Computer Science (CS)', citationLabel: 'Archived GATE CS 1999 question record', wording: 'Paraphrase'
+  },
+  {
+    id: 'gate-2000-q1-23', difficulty: 'easy', topic: 'Relational algebra expressiveness', sourceType: 'verified-exam',
+    prompt: 'With employee(name, salary, deptNo) and department(deptNo, deptName, address), which query cannot be expressed with basic relational algebra operators?',
+    options: ['Department address for each employee', 'Employees whose name equals their department name', 'Sum of all employee salaries', 'Employees belonging to a given department'], answer: 2,
+    solution: ['The department and employee queries can use joins, selections, and projections.', 'Basic relational algebra has no aggregation operator.', 'Computing a sum requires aggregation, so option C is not expressible in the listed basic operators.'],
+    exam: { ...gateSource('https://www.gateexam.info/docs/papers/CS/CS-2000.pdf', '2000'), answerKeyUrl: 'https://gateoverflow.in/647/gate-cse-2000-question-1-23-isro2016-57', verificationStatus: 'Archived paper scan and answer discussion checked' }, questionNumber: '1.23', paper: 'Computer Science (CS)', citationLabel: 'Archived GATE CS 2000 paper scan', wording: 'Paraphrase'
+  },
+  {
+    id: 'gate-2012-q43', difficulty: 'easy', topic: 'Referential integrity', sourceType: 'verified-exam',
+    prompt: 'R₁(A,B) has primary key A; R₂(C,D) has primary key C; B is a foreign key referencing C. Under referential integrity, which statement must hold?',
+    options: ['πB(R₁) − πC(R₂) = ∅', 'πC(R₂) − πB(R₁) = ∅', 'πB(R₁) = πC(R₂)', 'πB(R₁) − πC(R₂) ≠ ∅'], answer: 0,
+    solution: ['Every non-NULL foreign-key value in B must match a referenced key value in C.', 'Therefore no value in πB(R₁) can be absent from πC(R₂).', 'The reverse inclusion need not hold because some referenced rows may have no referencing row. Option A is always true.'],
+    exam: { ...gateSource('https://gateoverflow.in/2151/gate-cse-2012-question-43', '2012'), answerKeyUrl: 'https://gateoverflow.in/2151/gate-cse-2012-question-43', verificationStatus: 'Archived question transcription and answer discussion checked' }, questionNumber: '43', paper: 'Computer Science (CS)', citationLabel: 'Archived GATE CS 2012 question record', wording: 'Paraphrase'
+  },
+  {
+    id: 'gate-2014-set3-q21', difficulty: 'medium', topic: 'Relational algebra optimization', sourceType: 'verified-exam',
+    prompt: 'For A₁ ⊆ A₂, simplify πA₁(πA₂(σF₁(σF₂(R)))) to the equivalent optimized expression.',
+    options: ['πA₁(σF₁∧F₂(R))', 'πA₁(σF₁∨F₂(R))', 'πA₂(σF₁∧F₂(R))', 'πA₂(σF₁∨F₂(R))'], answer: 0,
+    solution: ['Cascaded selections combine using conjunction: σF₁(σF₂(R)) = σF₁∧F₂(R).', 'Because A₁ is a subset of A₂, the nested projections collapse to πA₁.', 'The resulting expression is πA₁(σF₁∧F₂(R)), option A.'],
+    exam: { ...gateSource('https://gateoverflow.in/2055/gate-cse-2014-set-3-question-21', '2014', 'Exact exam date not verified', 'Set 3; exact session time not stated in cited question record'), answerKeyUrl: 'https://gateoverflow.in/2055/gate-cse-2014-set-3-question-21', verificationStatus: 'Archived question transcription and answer discussion checked' }, questionNumber: '21', paper: 'Computer Science (CS), Set 3', citationLabel: 'Archived GATE CS 2014 Set 3 question record', wording: 'Paraphrase'
+  },
+  {
+    id: 'gate-2014-set3-q30', difficulty: 'medium', topic: 'Query semantics and set difference', sourceType: 'verified-exam',
+    prompt: 'The query πempId(employee) − πempId(employee ⋈(empId=eId ∧ empAge≤depAge) dependent) returns employees whose age is greater than the age of:',
+    options: ['At least one dependent', 'Every dependent in the database', 'At least one of their dependents', 'All of their dependents'], answer: 3,
+    solution: ['The join finds each employee who has at least one dependent whose age is at least the employee age.', 'Projecting empId marks those employees as violating “older than every dependent.”', 'Subtracting those IDs from all employee IDs leaves employees older than each of their dependents. Option D is correct.'],
+    exam: { ...gateSource('https://gateoverflow.in/2064/gate-cse-2014-set-3-question-30', '2014', 'Exact exam date not verified', 'Set 3; exact session time not stated in cited question record'), answerKeyUrl: 'https://gateoverflow.in/2064/gate-cse-2014-set-3-question-30', verificationStatus: 'Archived question transcription and accepted answer checked' }, questionNumber: '30', paper: 'Computer Science (CS), Set 3', citationLabel: 'Archived GATE CS 2014 Set 3 question record', wording: 'Paraphrase'
+  },
+  {
+    id: 'gate-2024-set2-q45', difficulty: 'medium', topic: 'Self-joins and Cartesian products', sourceType: 'verified-exam',
+    prompt: 'Person(pid, city) stores each person’s city. Using only selection, projection, Cartesian product, and rename, what is the minimum number of Cartesian products needed to list cities where at least three people reside?',
+    options: ['1', '2', '3', '4'], answer: 1,
+    solution: ['Create three renamed copies of Person so each copy represents a candidate resident.', 'Combine the three copies using two binary Cartesian products.', 'Select triples with equal city values and pairwise-distinct pids, then project the city.', 'Three distinct people require three relation copies, hence two products: option B.'],
+    exam: { ...gateSource('https://gate2026.iitg.ac.in/doc/download/2024/CS224S6.pdf', '2024', '10 February 2024', 'Afternoon (AN), Session 6, 14:30–17:30 IST'), answerKeyUrl: 'https://gate2026.iitg.ac.in/doc/download/2024/CS2FinalAnswerKey.pdf', scheduleUrl: 'https://gate2024.iisc.ac.in/examination-schedule/', verificationStatus: 'Official master question paper and final answer key verified' }, questionNumber: 'Q.45', paper: 'Computer Science and Information Technology (CS-2), Set 2', citationLabel: 'Official GATE 2024 CS-2 master question paper', wording: 'Paraphrase'
+  },
+  {
+    id: 'gate-2007-q59', difficulty: 'hard', topic: 'Set difference and query semantics', sourceType: 'verified-exam',
+    prompt: "Let femaleIds = πstudId(σsex='female'(studInfo)) and courseIds = πcourseId(enroll). What does πcourseId((femaleIds × courseIds) − enroll) return?",
+    options: ['Courses taken by every female student', 'Courses taken by a proper subset of female students', 'Courses taken only by male students', 'No courses, because the schemas differ'], answer: 1,
+    solution: ['femaleIds × courseIds forms every possible female-student/course pair.', 'Subtracting enroll leaves pairs where that female student is not enrolled in that course.', 'Projecting courseId returns courses missing at least one female enrollment; given the exam’s condition that every course has a female enrollee, these are courses taken by a proper subset of female students. Option B is correct.'],
+    exam: { ...gateSource('https://gateoverflow.in/2428/gate-cse-2007-question-59', '2007'), answerKeyUrl: 'https://gateoverflow.in/2428/gate-cse-2007-question-59', verificationStatus: 'Archived question transcription and detailed solution checked' }, questionNumber: '59', paper: 'Computer Science (CS)', citationLabel: 'Archived GATE CS 2007 question record', wording: 'Paraphrase'
+  },
+  {
+    id: 'gate-it-2007-q68', difficulty: 'hard', topic: 'Query optimization', sourceType: 'verified-exam',
+    prompt: "In a bank schema where branch is much smaller than account and depositor, which rewrite best optimizes πcName(σbCity='Agra' ∧ bal<0(branch ⋈ account ⋈ depositor))?",
+    options: ['Filter Agra branches, join account, apply bal<0, then join depositor', 'Join account with depositor first, then filter Agra branches', 'Filter account by bCity and join it to depositor', 'Apply the Agra filter to account and depositor before joining branch'], answer: 0,
+    solution: ['The city predicate belongs to branch and can be applied before any join.', 'The balance predicate belongs to account and should be applied as soon as branch and account have been joined.', 'This joins the relatively small filtered branch relation with account before the large depositor relation, reducing intermediate results.', 'Options C and D apply bCity to relations that do not have that attribute; B needlessly joins the two large relations first. Option A is the valid efficient rewrite.'],
+    exam: { ...gateSource('https://gateoverflow.in/3513/gate-it-2007-question-68', '2007'), exam: 'GATE IT', answerKeyUrl: 'https://gateoverflow.in/3513/gate-it-2007-question-68', verificationStatus: 'Archived question transcription and accepted optimization solution checked' }, questionNumber: '68', paper: 'Information Technology (IT)', citationLabel: 'Archived GATE IT 2007 question record', wording: 'Paraphrase', distractors: ['A selection must reference attributes present at that stage; bCity belongs to branch.']
+  },
+  {
+    id: 'gate-2015-set1-q7', difficulty: 'easy', topic: 'SQL and projection semantics', sourceType: 'verified-exam',
+    prompt: 'In SQL, SELECT column_list is most like which relational algebra operation, accounting for SQL’s default duplicate behavior?',
+    options: ['Selection σ, because both filter rows', 'Selection σ, except SQL retains duplicate rows', 'Projection π, except SQL retains duplicates unless DISTINCT is used', 'Projection π, because both always remove duplicates'], answer: 2,
+    solution: ['SQL SELECT chooses output columns; filtering rows is done separately with WHERE.', 'In relational algebra, choosing columns is projection π.', 'Classical relational algebra uses set semantics and removes duplicate projected tuples, while SQL keeps duplicates by default unless DISTINCT is specified.', 'Therefore option C is the closest equivalence.'],
+    exam: { ...gateSource('https://gateoverflow.in/8094/gate-cse-2015-set-1-question-7', '2015'), answerKeyUrl: 'https://gateoverflow.in/8094/gate-cse-2015-set-1-question-7', verificationStatus: 'Archived question transcription and accepted answer checked' }, questionNumber: '7', paper: 'Computer Science (CS), Set 1', citationLabel: 'Archived GATE CS 2015 Set 1 question record', wording: 'Paraphrase'
+  },
+  {
+    id: 'gate-2007-q60', difficulty: 'hard', topic: 'Tuple relational calculus', sourceType: 'verified-exam',
+    prompt: 'For employee(name, sex, supervisorName), consider {e.name | employee(e) ∧ ∀x [¬employee(x) ∨ x.supervisorName ≠ e.name ∨ x.sex = “male”]}. What does it return?',
+    options: ['Employees with a male supervisor', 'Employees with no immediate male subordinates', 'Employees with no immediate female subordinates', 'Employees with a female supervisor'], answer: 2,
+    solution: ['The universal condition is checked for every tuple x in employee.', 'If x is an immediate subordinate of e (x.supervisorName = e.name), the remaining disjunction requires x.sex = male.', 'So e is retained only when every immediate subordinate is male; equivalently, e has no immediate female subordinates. Option C is correct.'],
+    exam: { ...gateSource('https://gateoverflow.in/1258/gate-cse-2007-question-60', '2007'), answerKeyUrl: 'https://gateoverflow.in/1258/gate-cse-2007-question-60', verificationStatus: 'Archived question transcription and accepted calculus solution checked' }, questionNumber: '60', paper: 'Computer Science (CS)', citationLabel: 'Archived GATE CS 2007 question record', wording: 'Paraphrase'
   }
 ];
 
@@ -104,10 +174,10 @@ export function validateQuestionBank() {
     if (!question.id || ids.has(question.id)) errors.push(`Missing or duplicate question id: ${question.id || '(empty)'}`);
     ids.add(question.id);
     if (!['easy', 'medium', 'hard'].includes(question.difficulty)) errors.push(`${question.id}: invalid difficulty`);
-    if (!question.topic || !question.prompt || !Array.isArray(question.options) || question.options.length !== 4) errors.push(`${question.id}: question must have a topic, prompt, and four options`);
+    if (!question.topic || !question.prompt || !Array.isArray(question.options) || question.options.length !== 4 || new Set(question.options).size !== 4) errors.push(`${question.id}: question must have a topic, prompt, and four distinct options`);
     if (!Number.isInteger(question.answer) || question.answer < 0 || question.answer > 3) errors.push(`${question.id}: invalid correct option`);
     if (!Array.isArray(question.solution) || question.solution.length < 2) errors.push(`${question.id}: solution must have at least two steps`);
-    if (question.sourceType === 'verified-exam' && (!question.exam?.sourceUrl || !question.exam?.exam || !question.exam?.year || !question.exam?.date || !question.exam?.session || !question.questionNumber || !question.citationLabel || !question.wording || question.exam.verified !== true)) errors.push(`${question.id}: incomplete exam provenance`);
+    if (question.sourceType === 'verified-exam' && (!question.exam?.sourceUrl || !question.exam?.answerKeyUrl || !question.exam?.exam || !question.exam?.year || !question.exam?.date || !question.exam?.session || !question.exam?.verificationStatus || !question.questionNumber || !question.citationLabel || !['Verbatim', 'Paraphrase'].includes(question.wording) || question.exam.verified !== true)) errors.push(`${question.id}: incomplete exam provenance`);
   }
   return errors;
 }

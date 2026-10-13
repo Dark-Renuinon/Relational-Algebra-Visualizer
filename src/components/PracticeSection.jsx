@@ -66,8 +66,8 @@ export default function PracticeSection({ kind }) {
   return (
     <section className={`content-section practice-section ${isQuiz ? 'quiz-section' : 'exam-section'}`} id={isQuiz ? 'quiz' : 'competitive-exams'} aria-labelledby={`${kind}-heading`}>
       <div className="section-heading section-heading-wide">
-        <div><span className="eyebrow">{isQuiz ? 'Retry practice' : 'Verified past papers'}</span><h2 id={`${kind}-heading`}>{isQuiz ? 'Quiz' : 'Competitive Exams'}</h2>
-          <p>{isQuiz ? 'Practice relational algebra and DBMS concepts. Wrong attempts stay neutral; open the solution any time.' : 'Practice verified GATE CS questions with clear answer feedback and source details.'}</p>
+        <div><span className="eyebrow">{isQuiz ? 'Retry practice' : 'GATE past questions'}</span><h2 id={`${kind}-heading`}>{isQuiz ? 'Quiz' : 'Competitive Exams'}</h2>
+          <p>{isQuiz ? 'Practice relational algebra and DBMS concepts. Wrong attempts stay neutral; open the solution any time.' : 'Practice paraphrased GATE past-paper questions with source and answer-key references.'}</p>
         </div>
         <span className="practice-count">{isQuiz ? 'Practice bank' : 'Source-backed'}</span>
       </div>
@@ -75,6 +75,8 @@ export default function PracticeSection({ kind }) {
       <div className="difficulty-picker" role="group" aria-label={`${isQuiz ? 'Quiz' : 'Exam'} difficulty`}>
         <strong>Difficulty</strong>{LEVELS.map((level) => <button type="button" key={level} aria-pressed={difficulty === level} className={difficulty === level ? 'active' : ''} onClick={() => selectDifficulty(level)}>{level[0].toUpperCase() + level.slice(1)} <span>{getQuestions(isQuiz ? 'quiz' : 'exam', level).length}</span></button>)}
       </div>
+
+      {!isQuiz && questions.length > 0 && questions.length < 10 && <p className="limited-content-note" role="status">{questions.length} verified single-answer question{questions.length === 1 ? '' : 's'} available at this difficulty. Only questions with a checked source and answer reference are included.</p>}
 
       {finished ? <div className="practice-results" aria-live="polite">
         <span className="eyebrow">Practice complete</span><h3>{score} / {questions.length} correct</h3>
@@ -85,7 +87,7 @@ export default function PracticeSection({ kind }) {
         <div className="practice-controls"><button type="button" className="accent-control" onClick={restart}>Retry this difficulty</button><label>Choose another difficulty from the selector above.</label></div>
       </div> : !displayed ? <div className="empty-state">There are no verified questions for this difficulty yet. Choose another difficulty.</div> : <>
         <div className="practice-progress"><div><span>{reviewQuestion ? 'Review' : `Question ${index + 1} of ${questions.length}`}</span><span>{score} correct</span></div><progress value={index + 1} max={questions.length} aria-label="Question progress" /></div>
-        {!isQuiz && <div className="exam-provenance"><strong>{displayed.exam.exam} {displayed.exam.year}</strong><span>{displayed.exam.date} · {displayed.exam.session} · {displayed.paper} · Question {displayed.questionNumber}</span><small>Question wording: {displayed.wording?.toLowerCase()} from the source paper.</small><div><a href={displayed.exam.sourceUrl} target="_blank" rel="noreferrer">{displayed.citationLabel} ↗</a>{displayed.exam.scheduleUrl && <> · <a href={displayed.exam.scheduleUrl} target="_blank" rel="noreferrer">Official exam schedule ↗</a></>}</div></div>}
+        {!isQuiz && <div className="exam-provenance"><strong>{displayed.exam.exam} {displayed.exam.year}</strong><span>{displayed.exam.date} · {displayed.exam.session} · {displayed.paper} · Question {displayed.questionNumber}</span><small>Topic: {displayed.topic} · Difficulty: {difficulty} · Wording: {displayed.wording?.toLowerCase()}.</small><small>Verification: {displayed.exam.verificationStatus}</small><div><a href={displayed.exam.sourceUrl} target="_blank" rel="noreferrer">{displayed.citationLabel} ↗</a> · <a href={displayed.exam.answerKeyUrl} target="_blank" rel="noreferrer">Answer / solution reference ↗</a>{displayed.exam.scheduleUrl && <> · <a href={displayed.exam.scheduleUrl} target="_blank" rel="noreferrer">Official exam schedule ↗</a></>}</div></div>}
         <article className="question-card" key={displayed.id}>
           <div className="question-meta"><span>{displayed.topic}</span><span>{difficulty}</span></div>
           <h3>{displayed.prompt}</h3>
@@ -106,7 +108,7 @@ export default function PracticeSection({ kind }) {
             {!isQuiz && <p className="solution-answer"><strong>Answer: {LETTERS[displayed.answer]}. {displayed.options[displayed.answer]}</strong></p>}
             <ol>{displayed.solution.map((step, stepIndex) => <li key={stepIndex}>{step}</li>)}</ol>
             {displayed.distractors?.length > 0 && <p className="solution-note"><strong>Option check:</strong> {displayed.distractors.join(' ')}</p>}
-            {!isQuiz && <p className="solution-note"><strong>Provenance:</strong> {displayed.exam.exam} {displayed.exam.year}; {displayed.exam.date}; {displayed.exam.session}; {displayed.paper}; question {displayed.questionNumber}; wording is a paraphrase. <a href={displayed.exam.sourceUrl} target="_blank" rel="noreferrer">Open source paper</a>{displayed.exam.scheduleUrl && <> · <a href={displayed.exam.scheduleUrl} target="_blank" rel="noreferrer">Open official schedule</a></>}.</p>}
+            {!isQuiz && <p className="solution-note"><strong>Provenance:</strong> {displayed.exam.exam} {displayed.exam.year}; {displayed.exam.date}; {displayed.exam.session}; {displayed.paper}; question {displayed.questionNumber}; wording is {displayed.wording?.toLowerCase()}. {displayed.exam.verificationStatus}. <a href={displayed.exam.sourceUrl} target="_blank" rel="noreferrer">Open source paper</a> · <a href={displayed.exam.answerKeyUrl} target="_blank" rel="noreferrer">Open answer / solution reference</a>{displayed.exam.scheduleUrl && <> · <a href={displayed.exam.scheduleUrl} target="_blank" rel="noreferrer">Open official schedule</a></>}.</p>}
           </details>
         </article>
         <div className="practice-controls">

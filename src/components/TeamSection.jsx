@@ -22,6 +22,10 @@ export default function TeamSection() {
       </div>
 
       <aside className="guide-card" aria-label="Project guide">
+        <div className="guide-photo-wrap">
+          <img src={PROJECT_GUIDE.photo} alt={`Illustrated placeholder for ${PROJECT_GUIDE.name}`} className="guide-photo" onError={(event) => { event.currentTarget.hidden = true; event.currentTarget.nextElementSibling.hidden = false; }} />
+          <span className="guide-initials" role="img" aria-label={`Initials placeholder for ${PROJECT_GUIDE.name}`} hidden>SA</span>
+        </div>
         <span className="eyebrow">Guided by</span>
         <strong>{PROJECT_GUIDE.name}</strong>
         <span>{PROJECT_GUIDE.role}</span>
