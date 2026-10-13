@@ -4,6 +4,7 @@ export const TEAM_MEMBERS = [
 ];
 
 export const PROJECT_GUIDE = {
-  name: 'Dr. Swaminathan A',
-  role: 'Assistant Professor'
+name: 'Dr. Swaminathan A',
+role: 'Assistant Professor',
+photo: ${import.meta.env.BASE_URL}swaminathan.jpg
 };
